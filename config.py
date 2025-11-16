@@ -3,7 +3,7 @@
 # LLM API settings
 LLM_CONFIG = {
     "api_key": "your-openai-key",
-    "base_url": "your-openai-url",
+    "base_url": "https://api.openai.com/v1",
     "model_name": "gpt-4o",
     "temperature": 0.7,
     "max_tokens": 1000
