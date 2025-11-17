@@ -11,7 +11,7 @@ LLM_CONFIG = {
 
 # ToM Agent settings
 TOM_AGENT_CONFIG = {
-    "hypothesis_count": 7, 
+    "hypothesis_count": 5, 
     "target_diversity": 0.4,  
     "evidence_threshold": "medium-high"  
 }
