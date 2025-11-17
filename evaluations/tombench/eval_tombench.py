@@ -8,13 +8,13 @@ from main import MetamindApplication
 def main():
     app = MetamindApplication()
 
-    data_dir = "evaluations/tombench"
-    files = [f for f in os.listdir(data_dir) if f.endswith(".jsonl")]
+    data_dir = "/kaggle/working/evaluations/tombench"
+    files_subset = ['Ambiguous Story Task.jsonl', 'False Belief Task.jsonl', 'Faux-pas Recognition Test.jsonl', 'Hinting Task.jsonl', 'Persuasion Story Task.jsonl', 'Scalar Implicature Test.jsonl', 'Strange Story Task.jsonl', 'Unexpected Outcome Test.jsonl']
 
     total_correct = 0
     total_examples = 0
 
-    for filename in files:
+    for filename in files_subset:
         filepath = os.path.join(data_dir, filename)
         with open(filepath, "r", encoding="utf-8") as f:
             lines = f.readlines()
