@@ -9,6 +9,11 @@ LLM_CONFIG = {
     "max_tokens": 1000
 }
 
+# PineCone settings
+PINECONE_CONFIG = {
+    "api_key": "pcsk_2fpqjV_GKKhQaZV91PZnn7wrP1sV7PfBuqNJs4tHLU65RYPfd7ajtjCs7uk6f3NknJdD83"
+}
+
 # ToM Agent settings
 TOM_AGENT_CONFIG = {
     "hypothesis_count": 5, 

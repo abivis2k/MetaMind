@@ -1,4 +1,5 @@
 from typing import Dict, List, Any, Tuple
+from pinecone import Pinecone
 import math # For log in information gain calculation
 from .base_agent import BaseAgent
 from prompts.prompt_templates import DOMAIN_AGENT_PROMPTS
@@ -8,7 +9,7 @@ class DomainAgent(BaseAgent):
     Domain Agent: Refines hypotheses based on domain-specific rules and selects the best one.
     Implements the second stage of the Metamind system.
     """
-    def __init__(self, config: Dict[str, Any], llm_interface: Any, social_memory_interface: Any):
+    def __init__(self, config: Dict[str, Any], llm_interface: Any, social_memory_interface: Any, pinecone_interface: Any):
         """
         Initialize the Domain Agent.
         
@@ -22,6 +23,8 @@ class DomainAgent(BaseAgent):
         self.lambda_weight = config.get("lambda_weight", 0.6)
         self.domain_prompts = DOMAIN_AGENT_PROMPTS
         self.epsilon = 1e-9 # Small constant for log stability
+        self.pinecone = Pinecone(api_key: pinecone_interface["api_key"])
+        self.index = pc.Index("normbankvectors")
 
     def process(self, hypotheses: List[Dict[str, Any]], user_input: str, 
                 conversation_context: List[Dict[str, str]]) -> Dict[str, Any]:

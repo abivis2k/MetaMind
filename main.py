@@ -1,5 +1,5 @@
 import logging
-from config import LLM_CONFIG, TOM_AGENT_CONFIG, DOMAIN_AGENT_CONFIG, RESPONSE_AGENT_CONFIG, SOCIAL_MEMORY_CONFIG, MENTAL_STATE_TYPES
+from config import LLM_CONFIG, TOM_AGENT_CONFIG,DOMAIN_AGENT_CONFIG, RESPONSE_AGENT_CONFIG, SOCIAL_MEMORY_CONFIG, MENTAL_STATE_TYPES, PINECONE_CONFIG
 from llm_interface import OpenAILLM 
 from memory import SocialMemory
 from agents import ToMAgent, DomainAgent, ResponseAgent
@@ -19,9 +19,13 @@ class MetamindApplication:
         self.social_memory = SocialMemory(llm_interface=self.llm)
         logger.info("Social Memory initialized.")
 
-        # 3. Initialize Agents
+        # 3. Initialize Pinecone
+        self.pinecone = PINECONE_CONFIG
+        logger.info("Pinecone initialized")
+
+        # 4. Initialize Agents
         self.tom_agent = ToMAgent(llm_interface=self.llm, social_memory_interface=self.social_memory, config=TOM_AGENT_CONFIG)
-        self.domain_agent = DomainAgent(llm_interface=self.llm, social_memory_interface=self.social_memory, config=DOMAIN_AGENT_CONFIG)
+        self.domain_agent = DomainAgent(llm_interface=self.llm, social_memory_interface=self.social_memory, config=DOMAIN_AGENT_CONFIG, pinecone_interface = self.pinecone)
         self.response_agent = ResponseAgent(llm_interface=self.llm, config=RESPONSE_AGENT_CONFIG)
         logger.info("Agents (ToM, Domain, Response) initialized.")
 
