@@ -3,6 +3,9 @@ from pinecone import Pinecone
 import math # For log in information gain calculation
 from .base_agent import BaseAgent
 from prompts.prompt_templates import DOMAIN_AGENT_PROMPTS
+import logging
+from utils.helpers import setup_logger, parse_json_from_string
+logger = setup_logger("MetamindApp", level=logging.INFO) 
 
 class DomainAgent(BaseAgent):
     """
@@ -89,9 +92,29 @@ class DomainAgent(BaseAgent):
         formatted_context = self._format_conversation_context(conversation_context)
         social_memory_summary = str(self.social_memory.get_summary(user_id="default_user")) # Example
 
+        setting_behavior_constraint = self._get_setting_behavior_constraint(user_input, formatted_context, social_memory_summary)
+        logger.info(setting_behavior_constraint)
+
+        nl_norm = self._compare_predicted_normbank_inputs(setting_behavior_constraint)
+        logger.info(nl_norm)
+
         for h_tilde_i in refined_hypotheses:
+
+            nl_norm = nl_norm.lower()   # "expected" / "normal" / "taboo"
+            compat = {
+                "Belief":    {"expected":1.0, "normal":1.0, "taboo":0.95},
+                "Desire":    {"expected":1.1, "normal":1.0, "taboo":0.9},
+                "Intention": {"expected":1.2, "normal":1.0, "taboo":0.6},
+                "Emotion":   {"expected":1.05, "normal":1.0, "taboo":1.1},
+                "Thought":   {"expected":1.0, "normal":1.0, "taboo":1.05},
+            }
+            multiplier = compat.get(h_tilde_i["type"], {}).get(nl_norm, 1.0)
+            logger.info(multiplier)
+
             # P_cond = P(~h_i | u_t, C_t, M_t)
-            p_cond = self._get_conditional_probability(h_tilde_i, user_input, formatted_context, social_memory_summary)
+            p_cond_raw = self._get_conditional_probability(h_tilde_i, user_input, formatted_context, social_memory_summary)
+            
+            p_cond = max(0.0, min(1.0, p_cond_raw * multiplier))
             
             # P_prior = P(~h_i)
             p_prior = self._get_prior_probability(h_tilde_i)
@@ -148,6 +171,17 @@ class DomainAgent(BaseAgent):
         response = self.llm.generate(prompt)
         probability = self._parse_probability_response(response)
         return probability
+
+    def _get_setting_behavior_constraint(self, user_input, formatted_context, social_memory_summary):
+        prompt = self._format_prompt(
+            self.domain_prompts["setting_behavior_constraint"],
+            u_t=user_input,
+            C_t=formatted_context,
+            M_t=social_memory_summary
+        )
+        response = self.llm.generate(prompt)
+        return response
+
     def _parse_probability_response(self, llm_response: str) -> float:
         """
         Parse LLM response that's expected to be a probability or score.
@@ -173,7 +207,7 @@ class DomainAgent(BaseAgent):
     def _compare_predicted_normbank_inputs(self, llm_prediction = ""):
         # 1. Embed the text using OpenAI
         emb = self.llm.client.embeddings.create(
-            model="text-embedding-ada-002",   # or "text-embedding-ada-002"
+            model="text-embedding-ada-002",
             input=llm_prediction
         )
         vector = emb.data[0].embedding
@@ -181,17 +215,10 @@ class DomainAgent(BaseAgent):
         # 2. Query Pinecone index
         result = self.index.query(
             vector=vector,
-            top_k=4,
+            top_k=1,
             include_metadata=True
         )
 
-        # 3. Return ALL matches as a list of dicts
-        matches = []
-        for m in result.matches:
-            matches.append({
-                "id": m.id,
-                "score": m.score,
-                "metadata": m.metadata
-            })
-
-        return matches
+        # 3. Return the nearest neighbor
+        match = result.matches[0]
+        return match.metadata["nl_norm"]
