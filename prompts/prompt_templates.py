@@ -115,6 +115,34 @@ Inputs:
 
 Output Format (Return only the score):
 [A single float number between 0.0 and 1.0]
+""",
+    "setting_behavior_constraint": """
+Infer Setting, Behavior, and Social-Contextual Constraints Task
+
+Objective:
+Infer the most plausible setting, user behavior, and social/contextual constraints based on the user’s prompt, the conversational context, and the social memory.
+
+Inputs:
+User Prompt (u_t): {u_t}
+Conversational Context (C_t): {C_t}
+Social Memory Summary (M_t): {M_t}
+
+Instructions:
+Infer a plausible setting where the situation is occurring.
+Infer the behavior exhibited by the user in that setting.
+Infer social and contextual constraints that shape or influence the situation.
+
+These must be expressed as conditional statements in the format:
+when [CONDITION] and [CONDITION] …
+
+Conditions may describe social factors, interpersonal dynamics, contextual factors, etc.
+Any number of conditions (one or more) is acceptable.
+Output the result in the following exact format:
+
+[SETTING] - [USER BEHAVIOR] - when [SOCIAL/CONTEXTUAL CONDITION] and [SOCIAL/CONTEXTUAL CONDITION] …
+
+Output Format (Return only the line above, no extra text):
+[SETTING] - [USER BEHAVIOR] - when [SOCIAL/CONTEXTUAL CONDITION] and [SOCIAL/CONTEXTUAL CONDITION] …
 """
 }
 
