@@ -181,14 +181,17 @@ class DomainAgent(BaseAgent):
         # 2. Query Pinecone index
         result = self.index.query(
             vector=vector,
-            top_k=1,
+            top_k=4,
             include_metadata=True
         )
 
-        # 3. Return the nearest neighbor
-        match = result.matches[0]
-        return {
-            "id": match.id,
-            "score": match.score,
-            "metadata": match.metadata
-        }
+        # 3. Return ALL matches as a list of dicts
+        matches = []
+        for m in result.matches:
+            matches.append({
+                "id": m.id,
+                "score": m.score,
+                "metadata": m.metadata
+            })
+
+        return matches
