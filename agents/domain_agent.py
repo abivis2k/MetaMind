@@ -23,8 +23,8 @@ class DomainAgent(BaseAgent):
         self.lambda_weight = config.get("lambda_weight", 0.6)
         self.domain_prompts = DOMAIN_AGENT_PROMPTS
         self.epsilon = 1e-9 # Small constant for log stability
-        self.pinecone = Pinecone(api_key: pinecone_interface["api_key"])
-        self.index = pc.Index("normbankvectors")
+        self.pinecone = Pinecone(api_key = pinecone_interface["api_key"])
+        self.index = self.pinecone.Index("normbankvectors")
 
     def process(self, hypotheses: List[Dict[str, Any]], user_input: str, 
                 conversation_context: List[Dict[str, str]]) -> Dict[str, Any]:
@@ -168,4 +168,27 @@ class DomainAgent(BaseAgent):
         return {
             "explanation": "Parsed refined explanation: " + llm_response,
             "modification_log": {"parsed_log": "details..."}
+        }
+    
+    def _compare_predicted_normbank_inputs(self, llm_prediction = ""):
+        # 1. Embed the text using OpenAI
+        emb = self.llm.client.embeddings.create(
+            model="text-embedding-ada-002",   # or "text-embedding-ada-002"
+            input=llm_prediction
+        )
+        vector = emb.data[0].embedding
+
+        # 2. Query Pinecone index
+        result = self.index.query(
+            vector=vector,
+            top_k=1,
+            include_metadata=True
+        )
+
+        # 3. Return the nearest neighbor
+        match = result.matches[0]
+        return {
+            "id": match.id,
+            "score": match.score,
+            "metadata": match.metadata
         }
